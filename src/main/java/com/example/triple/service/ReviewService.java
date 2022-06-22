@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 
@@ -70,7 +69,8 @@ public class ReviewService {
             // 2. 리뷰 이미지가 있다면 INACTIVE
             reviewImgRepository.modifyReviewImgStatusInActive(reviewDto.getReviewId());
             // 3. 해당 리뷰의 포인트 차감
-            pointService.deletePoint(deletedReview);
+            int pointCnt = pointService.deletePoint(deletedReview);
+            logger.info("{}의 리뷰가 삭제되었습니다 {}",deletedReview.getPlace().getName(), pointCnt);
 
             return result;
         }catch (Exception e) {
@@ -194,7 +194,7 @@ public class ReviewService {
                     PointAction.DELETE,
                     pointCnt);
 
-            logger.info("{}의 리뷰가 수정되었습니다 -{}",savedReview.getPlace().getName(), pointCnt);
+            logger.info("{}의 리뷰가 수정되었습니다 {}",savedReview.getPlace().getName(), pointCnt);
         }
     }
 

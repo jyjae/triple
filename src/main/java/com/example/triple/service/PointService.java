@@ -122,14 +122,16 @@ public class PointService {
 
     }
 
-    public int getReviewPoint(UUID reviewId) throws BaseException {
+    public int getReviewPoint(UUID reviewId, UUID userId) throws BaseException {
         try {
             return calculatePoint(pointRepository.findAllByReviewIdAndStatus(
                     reviewId,
+                    userId,
                     "ACTIVE")
             );
 
         }catch (Exception e) {
+            e.printStackTrace();
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
         }
     }
@@ -142,11 +144,13 @@ public class PointService {
         return pointCnt;
     }
 
-    public void deletePoint(Review deletedReview) throws BaseException {
+    public int deletePoint(Review deletedReview) throws BaseException {
         try {
+            int pointCnt = getReviewPoint(deletedReview.getId(), null) * (-1);
             pointRepository
                     .save(Point.of(deletedReview.getUser(), deletedReview,
-                            PointAction.DELETE, getReviewPoint(deletedReview.getId()) * (-1)));
+                            PointAction.DELETE, pointCnt));
+            return pointCnt;
         }catch (Exception e) {
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
         }

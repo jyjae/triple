@@ -1,10 +1,7 @@
 package com.example.triple.domain;
 
 import com.example.triple.constant.PointAction;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.GenericGenerator;
@@ -22,6 +19,7 @@ import java.util.UUID;
 @Table(name = "points")
 @DynamicInsert
 @NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 public class Point {
