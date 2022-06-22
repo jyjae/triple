@@ -1,9 +1,11 @@
 package com.example.triple.domain;
 
-import com.example.triple.constant.Status;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -17,6 +19,8 @@ import java.util.UUID;
 @Setter
 @ToString
 @Table(name = "user_profile_imgs")
+@DynamicInsert
+@NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 public class UserProfileImg {
@@ -34,9 +38,9 @@ public class UserProfileImg {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, columnDefinition = "varchar(10) default 'ACTIVE'")
-    @Enumerated(EnumType.STRING)
-    private Status Status;
+    @Column(nullable = false)
+    @ColumnDefault("'ACTIVE'")
+    private String status;
 
     @CreatedDate
     private LocalDateTime createdAt;

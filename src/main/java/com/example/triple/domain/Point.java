@@ -1,12 +1,12 @@
 package com.example.triple.domain;
 
-import com.example.triple.constant.EventAction;
 import com.example.triple.constant.PointAction;
-import com.example.triple.constant.PointType;
-import com.example.triple.constant.Status;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -20,6 +20,8 @@ import java.util.UUID;
 @Setter
 @ToString
 @Table(name = "points")
+@DynamicInsert
+@NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 public class Point {
@@ -37,6 +39,8 @@ public class Point {
     @JoinColumn(name = "review_id")
     private Review review;
 
+    private Integer pointCnt;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private PointAction action;
@@ -45,9 +49,9 @@ public class Point {
 //    @Enumerated(EnumType.STRING)
 //    private PointType pointType;
 
-    @Column(nullable = false, columnDefinition = "varchar(10) default 'ACTIVE'")
-    @Enumerated(EnumType.STRING)
-    private Status status;
+    @Column(nullable = false)
+    @ColumnDefault("'ACTIVE'")
+    private String status;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -55,21 +59,24 @@ public class Point {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public Point(User user, Review review, PointAction action) {
+    public Point(User user, Review review, PointAction action, Integer pointCnt) {
         this.user = user;
         this.review = review;
         this.action = action;
+        this.pointCnt = pointCnt;
     }
 
     public static Point of(
             User user,
             Review review,
-            PointAction action)
+            PointAction action,
+            Integer pointCnt)
     {
         return new Point(
                 user,
                 review,
-                action
+                action,
+                pointCnt
         );
     }
 }

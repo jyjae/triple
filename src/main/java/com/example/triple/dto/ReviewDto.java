@@ -47,12 +47,16 @@ public class ReviewDto {
     }
 
 
-
     public Review toEntity(User user, Place place) {
         return Review.of(
               content,
               user,
               place
         );
+    }
+
+    public Review updateEntity(Review savedReview) {
+        savedReview.setContent(content);
+        return savedReview;
     }
 }

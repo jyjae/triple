@@ -5,8 +5,6 @@ import com.example.triple.config.BaseResponse;
 import com.example.triple.constant.EventAction;
 import com.example.triple.constant.EventType;
 import com.example.triple.dto.EventRequest;
-import com.example.triple.dto.EventResponse;
-import com.example.triple.dto.ReviewImgDto;
 import com.example.triple.service.ReviewService;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +21,7 @@ public class EventController {
 
     @PostMapping
     @ResponseBody
-    public BaseResponse<EventResponse> upsertEvent(@RequestBody @Valid EventRequest eventRequest) {
+    public BaseResponse<Object> upsertEvent(@RequestBody @Valid EventRequest eventRequest) {
         EventType eventType = eventRequest.getType();
         Object result = 0;
 
@@ -35,7 +33,7 @@ public class EventController {
                             : reviewService.upsertReview(eventRequest.toDto());
 
             }
-            return new BaseResponse<>(new EventResponse(result));
+            return new BaseResponse<>(result);
         } catch (BaseException e) {
             return new BaseResponse<>(e.getStatus());
         }

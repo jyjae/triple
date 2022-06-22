@@ -1,9 +1,11 @@
 package com.example.triple.domain;
 
-import com.example.triple.constant.Status;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -16,7 +18,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 @Table(name = "review_imgs")
+@DynamicInsert
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 public class ReviewImg {
@@ -30,13 +34,13 @@ public class ReviewImg {
     @JoinColumn(name = "review_id")
     private Review review;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "recent_img_id")
     private RecentImg recentImg;
 
-    @Column(nullable = false, columnDefinition = "varchar(10) default 'ACTIVE'")
-    @Enumerated(EnumType.STRING)
-    private Status status;
+    @Column(nullable = false)
+    @ColumnDefault("'ACTIVE'")
+    private String status;
 
     @CreatedDate
     private LocalDateTime createdAt;
