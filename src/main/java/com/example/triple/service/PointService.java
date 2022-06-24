@@ -136,7 +136,7 @@ public class PointService {
         }
     }
 
-    private int calculatePoint(List<Point> points) {
+    public int calculatePoint(List<Point> points) {
         int pointCnt = 0;
         for(Point point : points) {
             pointCnt += point.getPointCnt();

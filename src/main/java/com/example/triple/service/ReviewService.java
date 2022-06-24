@@ -5,9 +5,7 @@ import com.example.triple.config.BaseResponseStatus;
 import com.example.triple.constant.EventAction;
 import com.example.triple.constant.PointAction;
 import com.example.triple.domain.*;
-import com.example.triple.dto.CreateReviewResponse;
-import com.example.triple.dto.ReviewDto;
-import com.example.triple.dto.UpdateReviewResponse;
+import com.example.triple.dto.*;
 import com.example.triple.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
 
 
 @Service
@@ -26,9 +24,9 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ReviewImgRepository reviewImgRepository;
-    private final PlaceRepository placeRepository;
+    private final PlaceService placeService;
 
     private final PointService pointService;
     private final RecentImgRepository recentImgRepository;
@@ -36,23 +34,23 @@ public class ReviewService {
 
     public ReviewService(
             ReviewRepository reviewRepository,
-            UserRepository userRepository,
-            PlaceRepository placeRepository,
+            UserService userService,
+            PlaceService placeService,
             PointService pointService,
             ReviewImgRepository reviewImgRepository,
             RecentImgRepository recentImgRepository
     ) {
         this.reviewRepository = reviewRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.reviewImgRepository = reviewImgRepository;
-        this.placeRepository = placeRepository;
+        this.placeService = placeService;
         this.pointService = pointService;
         this.recentImgRepository = recentImgRepository;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Long deleteReview(ReviewDto reviewDto) throws BaseException {
-        if(!userRepository.existsByIdAndStatus(reviewDto.getUserId(), "ACTIVE")
+    public EventResponse<Long> deleteReview(ReviewDto reviewDto) throws BaseException {
+        if(!userService.existsByIdAndStatus(reviewDto.getUserId(), "ACTIVE")
         ) {
             throw new BaseException(BaseResponseStatus.USER_NOT_EXISTS);
         }
@@ -70,9 +68,9 @@ public class ReviewService {
             reviewImgRepository.modifyReviewImgStatusInActive(reviewDto.getReviewId());
             // 3. 해당 리뷰의 포인트 차감
             int pointCnt = pointService.deletePoint(deletedReview);
-            logger.info("{}의 리뷰가 삭제되었습니다 {}",deletedReview.getPlace().getName(), pointCnt);
+            logger.info("Id:{}, {}님의 {}의 리뷰가 삭제되었습니다 {}",deletedReview.getUser().getId(), deletedReview.getUser().getName(),deletedReview.getPlace().getName(), pointCnt);
 
-            return result;
+            return new EventResponse<>(result);
         }catch (Exception e) {
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
         }
@@ -82,22 +80,22 @@ public class ReviewService {
     @Transactional(rollbackFor = Exception.class)
     public Object upsertReview(ReviewDto reviewDto) throws BaseException {
 
-        if(!userRepository.existsByIdAndStatus(reviewDto.getUserId(), "ACTIVE")) {
+        if(!userService.existsByIdAndStatus(reviewDto.getUserId(), "ACTIVE")) {
             throw new BaseException(BaseResponseStatus.USER_NOT_EXISTS);
         }
-        if(!placeRepository.existsByIdAndStatus(reviewDto.getPlaceId(), "ACTIVE")) {
+        if(!placeService.existsByIdAndStatus(reviewDto.getPlaceId(), "ACTIVE")) {
             throw new BaseException(BaseResponseStatus.PLACE_NOT_EXISTS);
         }
 
         if(reviewDto.getAction() == EventAction.ADD && reviewDto.getReviewId() == null) {
-             return createReview(reviewDto);
+             return new CreateReviewResponse(createReview(reviewDto));
         } else {
              return modifyReview(reviewDto);
         }
 
     }
 
-    private Review getReview(ReviewDto reviewDto) throws BaseException {
+    public Review getReview(ReviewDto reviewDto) throws BaseException {
         try{
             return reviewRepository.findByIdAndUserIdAndPlaceIdAndStatus(
                     reviewDto.getReviewId(),
@@ -110,7 +108,7 @@ public class ReviewService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private UpdateReviewResponse modifyReview(ReviewDto reviewDto) throws BaseException {
+    public UpdateReviewResponse modifyReview(ReviewDto reviewDto) throws BaseException {
 
         Review savedReview = getReview(reviewDto);
 
@@ -137,12 +135,12 @@ public class ReviewService {
         }
     }
 
-    private void modifyReviewImg(List<UUID> attachedPhotoIds, Review review) throws BaseException {
+    public void modifyReviewImg(List<UUID> attachedPhotoIds, Review review) throws BaseException {
         List<ReviewImg> deleteReviewImgs = new ArrayList<>();
         //INACTIVE reviewImgs
         if(review.getReviewImgs()!=null) {
             for (ReviewImg reviewImg : review.getReviewImgs()) {
-                if (attachedPhotoIds == null || !attachedPhotoIds.contains(reviewImg.getId())) {
+                if (attachedPhotoIds == null || !attachedPhotoIds.contains(reviewImg.getRecentImg().getId())) {
                     reviewImg.setStatus("INACTIVE");
                     deleteReviewImgs.add(reviewImg);
                 }
@@ -159,7 +157,7 @@ public class ReviewService {
                 boolean check = false;
                 if(review.getReviewImgs()!=null) {
                     for (ReviewImg reviewImg : review.getReviewImgs()) {
-                        if (reviewImg.getRecentImg().toString().equals(imgId.toString())) {
+                        if (reviewImg.getRecentImg().getId().toString().equals(imgId.toString())) {
                             check = true;
                         }
                     }
@@ -178,7 +176,7 @@ public class ReviewService {
     }
 
 
-    private void addPoint(Review savedReview, int pointCnt) throws BaseException {
+    public void addPoint(Review savedReview, int pointCnt) throws BaseException {
         if(pointCnt >0) {
             pointService.addPoint(
                     savedReview.getUser(),
@@ -186,7 +184,7 @@ public class ReviewService {
                     PointAction.ADD,
                     pointCnt);
 
-            logger.info("{}의 리뷰가 수정되었습니다 +{}",savedReview.getPlace().getName(), pointCnt);
+            logger.info("Id:{}, {}님의 {}의 리뷰가 수정되었습니다 +{}",savedReview.getUser().getId(), savedReview.getUser().getName(), savedReview.getPlace().getName(), pointCnt);
         }else if(pointCnt <0) {
             pointService.addPoint(
                     savedReview.getUser(),
@@ -194,23 +192,25 @@ public class ReviewService {
                     PointAction.DELETE,
                     pointCnt);
 
-            logger.info("{}의 리뷰가 수정되었습니다 {}",savedReview.getPlace().getName(), pointCnt);
+            logger.info("Id:{}, {}님의 {}의 리뷰가 수정되었습니다 {}",savedReview.getUser().getId(), savedReview.getUser().getName(), savedReview.getPlace().getName(), pointCnt);
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private CreateReviewResponse createReview(ReviewDto reviewDto) throws BaseException {
+    public UUID createReview(ReviewDto reviewDto) throws BaseException {
+        if(reviewRepository.existsByUserIdAndPlaceIdAndStatus(reviewDto.getUserId(), reviewDto.getPlaceId(), "ACTIVE")) {
+            throw new BaseException(BaseResponseStatus.EXISTS_REVIEW_BY_USER_AND_PLACE);
+        }
+
         try {
 
-           User user = userRepository.findByIdAndStatus(
+           User user = userService.findByIdAndStatus(
                    reviewDto.getUserId(),
-                   "ACTIVE")
-                   .orElseThrow(() -> new BaseException(BaseResponseStatus.USER_NOT_EXISTS));
+                   "ACTIVE");
 
-           Place place = placeRepository.findByIdAndStatus(
+           Place place = placeService.findByIdAndStatus(
                    reviewDto.getPlaceId(),
-                   "ACTIVE")
-                   .orElseThrow(() -> new BaseException(BaseResponseStatus.PLACE_NOT_EXISTS));
+                   "ACTIVE");
 
            int point = pointService.countPoint(
                    place.getId(),
@@ -222,9 +222,9 @@ public class ReviewService {
            createReviewImgs(reviewDto, review);
 
            pointService.addPoint(user, review, PointAction.ADD, point);
-           if(point!=0) logger.info("{}의 리뷰를 작성했습니다 +{}",place.getName(), point);
+           if(point!=0) logger.info("Id:{}, {}님의 {}의 리뷰를 작성했습니다 +{}",user.getId(), user.getName(), place.getName(), point);
 
-           return new CreateReviewResponse(review.getId());
+           return review.getId();
 
         }catch (Exception e) {
             e.printStackTrace();
@@ -248,6 +248,22 @@ public class ReviewService {
     }
 
 
+    public List<ReviewResponse> getReviewIds(UUID userId) throws BaseException {
+        if(!userService.existsByIdAndStatus(userId, "ACTIVE")) {
+            throw new BaseException(BaseResponseStatus.USER_NOT_EXISTS);
+        }
 
+        try {
+            return reviewRepository.findByUserIdAndStatus(userId,"ACTIVE").get()
+                    .stream().map(r ->
+                            new ReviewResponse(r.getId(), r.getContent(), r.getUser().getId(), r.getPlace().getId(),
+                                    r.getReviewImgs()
+                                            .stream().map(i -> new ReviewImgResponse(i.getId(), i.getReview().getId(), i.getRecentImg().getId(), i.getRecentImg().getImgUrl()))
+                                            .collect(Collectors.toList())))
+                    .collect(Collectors.toList());
 
+        }catch (Exception e) {
+            throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
+        }
+    }
 }

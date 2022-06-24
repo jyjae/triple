@@ -36,15 +36,20 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user")
     private List<UserProfileImg> userProfileImgs;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user")
     private List<Review> reviews = new LinkedList<>();
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user")
     private List<Point> points = new LinkedList<>();
+
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user")
+    private List<RecentImg> recentImgs = new LinkedList<>();
 
     @Column(nullable = false)
     @ColumnDefault("'ACTIVE'")
@@ -58,5 +63,10 @@ public class User {
 
     public User(String name) {
         this.name = name;
+    }
+
+
+    public static User of(String name) {
+        return new User(name);
     }
 }

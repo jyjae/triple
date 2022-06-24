@@ -52,4 +52,8 @@ public class Place {
     public Place(String name) {
         this.name = name;
     }
+
+    public static Place of(String name) {
+        return new Place(name);
+    }
 }

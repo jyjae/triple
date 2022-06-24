@@ -64,7 +64,13 @@ test {
  * queryDSL 설정 추가
  */
 
-def querydslDir = "$buildDir/generated/querydsl"
+def querydslDir = "src/main/generated"
+//"$buildDir/generated/querydsl"
+// querydsl QClass 파일 생성 위치를 지정
+
+tasks.withType(JavaCompile) {
+	options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
+}
 
 querydsl {
 	jpa = true

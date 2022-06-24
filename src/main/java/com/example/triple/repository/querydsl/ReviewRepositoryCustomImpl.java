@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -47,12 +48,15 @@ public class ReviewRepositoryCustomImpl extends QuerydslRepositorySupport implem
                 .where(review.place.id.eq(placeId))
                 .where(review.status.eq(status));
 
-        Review savedReview = query.fetchOne();
-        savedReview.getReviewImgs().removeAll(
+        Optional<Review> savedReviewOptional = Optional.ofNullable(query.fetchOne());
+        Review savedReview = savedReviewOptional.orElse(null);
+         if(savedReview!=null) {
+             savedReview.getReviewImgs().removeAll(
                 savedReview.getReviewImgs().stream()
                         .filter(x->x.getStatus().equals("INACTIVE"))
-                        .collect(Collectors.toList())
-        );
+                        .collect(Collectors.toList()));
+         }
+
         return savedReview;
     }
 

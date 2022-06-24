@@ -50,4 +50,8 @@ public class RecentImg {
         this.user = user;
         this.imgUrl = imgUrl;
     }
+
+    public static RecentImg of(User user, String imgUrl) {
+        return new RecentImg(user, imgUrl);
+    }
 }

@@ -2,6 +2,7 @@ package com.example.triple.repository.querydsl;
 
 import com.example.triple.domain.Review;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ReviewRepositoryCustom {

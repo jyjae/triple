@@ -15,7 +15,6 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class EventRequest {
     @NotNull
     private EventType type;
@@ -27,6 +26,23 @@ public class EventRequest {
     private UUID userId;
     private UUID placeId;
 
+    private EventRequest(
+            EventType type,
+            EventAction action,
+            UUID reviewId,
+            String content,
+            List<UUID> attachedPhotoIds,
+            UUID userId,
+            UUID placeId) {
+        this.type = type;
+        this.action = action;
+        this.reviewId = reviewId;
+        this.content = content;
+        this.attachedPhotoIds = attachedPhotoIds;
+        this.userId = userId;
+        this.placeId = placeId;
+    }
+
     public ReviewDto toDto() {
         return ReviewDto.of(
                 this.type,
@@ -36,6 +52,26 @@ public class EventRequest {
                 this.attachedPhotoIds,
                 this.userId,
                 this.placeId
+        );
+    }
+
+    public static EventRequest of(
+            EventType type,
+            EventAction action,
+            UUID reviewId,
+            String content,
+            List<UUID> attachedPhotoIds,
+            UUID userId,
+            UUID placeId
+    ) {
+        return new EventRequest(
+                type,
+                action,
+                reviewId,
+                content,
+                attachedPhotoIds,
+                userId,
+                placeId
         );
     }
 }
