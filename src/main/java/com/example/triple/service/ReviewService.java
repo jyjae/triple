@@ -83,9 +83,6 @@ public class ReviewService {
         if(!userService.existsByIdAndStatus(reviewDto.getUserId(), "ACTIVE")) {
             throw new BaseException(BaseResponseStatus.USER_NOT_EXISTS);
         }
-        if(!placeService.existsByIdAndStatus(reviewDto.getPlaceId(), "ACTIVE")) {
-            throw new BaseException(BaseResponseStatus.PLACE_NOT_EXISTS);
-        }
 
         if(reviewDto.getAction() == EventAction.ADD && reviewDto.getReviewId() == null) {
              return new CreateReviewResponse(createReview(reviewDto));
@@ -93,6 +90,17 @@ public class ReviewService {
              return modifyReview(reviewDto);
         }
 
+    }
+
+    private boolean checkRecentImgs(List<UUID> attachedPhotoIds) {
+        if(attachedPhotoIds!=null && !attachedPhotoIds.isEmpty()) {
+            for(UUID imgId : attachedPhotoIds) {
+                 if(!recentImgRepository.existsByIdAndStatus(imgId, "ACTIVE")) {
+                     return false;
+                 }
+            }
+        }
+        return true;
     }
 
     public Review getReview(ReviewDto reviewDto) throws BaseException {
@@ -109,11 +117,15 @@ public class ReviewService {
 
     @Transactional(rollbackFor = Exception.class)
     public UpdateReviewResponse modifyReview(ReviewDto reviewDto) throws BaseException {
-
+        if(reviewDto.getReviewId()==null) {
+            throw new BaseException(BaseResponseStatus.REVIEW_NOT_EXISTS);
+        }
         Review savedReview = getReview(reviewDto);
-
         if(savedReview==null) {
             throw new BaseException(BaseResponseStatus.REVIEW_NOT_EXISTS);
+        }
+        if(!checkRecentImgs(reviewDto.getAttachedPhotoIds())) {
+            throw new BaseException(BaseResponseStatus.IMG_NOT_EXISTS);
         }
 
         try {
@@ -198,8 +210,14 @@ public class ReviewService {
 
     @Transactional(rollbackFor = Exception.class)
     public UUID createReview(ReviewDto reviewDto) throws BaseException {
+        if(!placeService.existsByIdAndStatus(reviewDto.getPlaceId(), "ACTIVE")) {
+            throw new BaseException(BaseResponseStatus.PLACE_NOT_EXISTS);
+        }
         if(reviewRepository.existsByUserIdAndPlaceIdAndStatus(reviewDto.getUserId(), reviewDto.getPlaceId(), "ACTIVE")) {
             throw new BaseException(BaseResponseStatus.EXISTS_REVIEW_BY_USER_AND_PLACE);
+        }
+        if(!checkRecentImgs(reviewDto.getAttachedPhotoIds())) {
+            throw new BaseException(BaseResponseStatus.IMG_NOT_EXISTS);
         }
 
         try {

@@ -36,8 +36,10 @@ public class TripleApplication implements CommandLineRunner {
 
 		Place place1 = Place.of("괌리프 호텔");
 		Place place2 = Place.of("하얏트 리젠시 괌");
+		Place place3 = Place.of("뉴욕 리젠시 호텔");
 		Place savedPlace1 = placeRepository.save(place1);
 		Place savedPlace2 = placeRepository.save(place2);
+		Place savedPlace3 = placeRepository.save(place3);
 
 		RecentImg recentImg3 = RecentImg.of(savedUser1, "https://triple.com/images/54SDFSDESDFS78244G.jpg");
 		RecentImg recentImg4 = RecentImg.of(savedUser1, "https://triple.com/images/54SDAAADESDFS78244G.jpg");
