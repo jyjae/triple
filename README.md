@@ -1,7 +1,15 @@
 ---
 ##  트리플여행자 클럽 마일리지 서비스
 
-
+---
+### 잠시만요!
+- 장소 뉴욕 리젠시 호텔에 대한 리뷰가 아직 없습니다. 
+  보너스 점수 확인하실 때 뉴욕 리젠시 호텔에 대한 리뷰 작성을 해주시면 감사하겠습니다. :)
+- 이벤트 발생 API의 "attachedPhotoIds" 값들은 리뷰 이미지의 id값이 아닌 **최근 이미지 조회 API** Response값의 id값입니다. 
+  참고부탁드립니다. :)
+  
+  
+  
 ---
 ### 1. API
 | METHOD | URI | DESCRIPTION |
@@ -9,7 +17,7 @@
 | GET   | /users?user-name={user-name}  | 유저 조회 API       |
 | GET   | /reviews?user-id={user-id}    | 리뷰 조회 API       |
 | GET   | /places                       | 장소 조회 API       |
-| GET   | /recentImgs?user-id={user-id} | 장소 조회 API       |
+| GET   | /recentImgs?user-id={user-id} | 최근 이미지 조회 API       |
 | GET   | /points/{user-id}             | 유저 포인트 조회 API|
 | POST  | /events                       | 이벤트 발생 API     |
 
